@@ -1,10 +1,14 @@
 import express from "express";
 
+import users from "./routes/users";
+
 const app = express();
 const PORT = 3000;
 
-app.get("/", (req, res) => {
-    res.send("Hello, World!");
+app.use("/api/users", users);
+
+app.get("/", async (req, res) => {
+    res.send("XIO API");
 });
 
 if (!process.env.DETA_RUNTIME) {

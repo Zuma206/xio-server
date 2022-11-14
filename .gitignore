@@ -1,3 +1,4 @@
 .deta
 dist
 node_modules
+src/serviceAccount.json

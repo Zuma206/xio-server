@@ -6,6 +6,7 @@
       "removeComments": true,
       "strict": false,
       "outDir": "dist",
+      "resolveJsonModule": true
     },
     "include": ["src/**/*"],
   }
