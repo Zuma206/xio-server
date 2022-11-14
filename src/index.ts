@@ -7,7 +7,7 @@ const PORT = 3000;
 
 app.use("/api/users", users);
 
-app.get("/", async (req, res) => {
+app.get("*", async (req, res) => {
     res.send("XIO API");
 });
 
