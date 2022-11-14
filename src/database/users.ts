@@ -4,8 +4,19 @@ import md5 from "md5";
 
 const users = deta.Base("users");
 
-export const getUserById = async (uid: string) => {
-    return await users.get(uid);
+export type XIOUser = {
+    username: string;
+    gravatar: string;
+    channels: string[];
+    key?: string;
+};
+
+export const getUserById = async (uid: string): Promise<null | XIOUser> => {
+    const user = await users.get(uid);
+    if (user) {
+        return user as XIOUser;
+    }
+    return null;
 };
 
 export const getGravatar = (token: DecodedIdToken) => {
@@ -23,6 +34,7 @@ export const createUser = async (
         {
             username,
             gravatar: getGravatar(token),
+            channels: [],
         },
         token.uid
     );
