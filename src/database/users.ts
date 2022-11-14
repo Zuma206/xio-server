@@ -13,7 +13,12 @@ export const getGravatar = (token: DecodedIdToken) => {
     return `https://www.gravatar.com/avatar/${hash}`;
 };
 
-export const createUser = async (username: string, token: DecodedIdToken) => {
+export const createUser = async (
+    username: string,
+    token: DecodedIdToken
+): Promise<boolean> => {
+    if (await users.get(token.uid)) return false;
+
     await users.put(
         {
             username,
@@ -21,4 +26,6 @@ export const createUser = async (username: string, token: DecodedIdToken) => {
         },
         token.uid
     );
+
+    return true;
 };

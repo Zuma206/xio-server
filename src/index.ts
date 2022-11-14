@@ -5,6 +5,7 @@ import users from "./routes/users";
 const app = express();
 const PORT = 3000;
 
+app.use(express.json());
 app.use("/api/users", users);
 
 app.get("*", async (req, res) => {
