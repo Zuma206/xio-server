@@ -8,7 +8,7 @@ export type XIOUser = {
     username: string;
     gravatar: string;
     channels: string[];
-    key?: string;
+    key: string;
 };
 
 export const getUserById = async (uid: string): Promise<null | XIOUser> => {
@@ -40,4 +40,16 @@ export const createUser = async (
     );
 
     return true;
+};
+
+export const userJoinChannel = async (
+    channelId: string,
+    userData: DecodedIdToken
+) => {
+    return await users.update(
+        {
+            channels: users.util.append(channelId),
+        },
+        userData.uid
+    );
 };

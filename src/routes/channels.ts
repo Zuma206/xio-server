@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserChannels } from "../database/channels";
+import { createChannel, getUserChannels } from "../database/channels";
 import { firebase } from "../firebase";
 
 const router = Router();
@@ -14,9 +14,28 @@ router.get("/", async (req, res) => {
                 result: userChannels,
             });
         })
-        .catch(() => {
+        .catch((err) => {
             res.status(400).send({
-                error: "Authentication failed",
+                error: err.message,
+                result: null,
+            });
+        });
+});
+
+router.post("/create", async (req, res) => {
+    firebase
+        .verifyIdToken(req.headers.authorization ?? "")
+        .then(async (userData) => {
+            console.log("body name:", req.body.name);
+            const success = await createChannel(req.body.name, userData);
+            res.send({
+                error: null,
+                result: success,
+            });
+        })
+        .catch((err) => {
+            res.status(400).send({
+                error: err.message,
                 result: null,
             });
         });

@@ -1,6 +1,6 @@
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import deta from "./deta";
-import { getUserById } from "./users";
+import { getUserById, userJoinChannel } from "./users";
 
 const channels = deta.Base("channels");
 
@@ -8,6 +8,7 @@ export type XIOChannel = {
     name: string;
     owners: string[];
     blacklist: string[];
+    key: string;
 };
 
 export const getChannelById = async (
@@ -26,8 +27,23 @@ export const getUserChannels = async (
     const userData = await getUserById(token.uid);
     if (!userData) return null;
     const userChannels: XIOChannel[] = [];
-    userData.channels.forEach(async (channelId) => {
-        userChannels.push(await getChannelById(channelId));
-    });
+    for (const channelId of userData.channels) {
+        const details = await getChannelById(channelId);
+        if (details) {
+            userChannels.push(details);
+        }
+    }
     return userChannels;
+};
+
+export const createChannel = async (name: string, token: DecodedIdToken) => {
+    const channelDetails = (await channels.put({
+        name,
+        owners: [token.uid],
+        blacklist: [],
+    })) as XIOChannel;
+
+    await userJoinChannel(channelDetails.key, token);
+
+    return true;
 };
