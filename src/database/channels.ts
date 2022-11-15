@@ -41,7 +41,6 @@ export const createChannel = async (name: string, token: DecodedIdToken) => {
         name,
         owners: [token.uid],
         blacklist: [],
-        messages: 0,
     })) as XIOChannel;
 
     await userJoinChannel(channelDetails.key, token);
