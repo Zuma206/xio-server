@@ -1,68 +1,32 @@
 import { Router } from "express";
 import { createUser, getUserById } from "../database/users";
-import { firebase } from "../firebase";
+import { authorize } from "../firebase";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
-    firebase
-        .verifyIdToken(req.headers.authorization ?? "")
-        .then(async (userData) => {
-            const xioUserData = await getUserById(userData.uid);
-            res.send({
-                error: null,
-                result: xioUserData,
-            });
-        })
-        .catch(() => {
-            res.status(400).send({
-                error: "Authentication failed",
-                result: null,
-            });
-        });
-});
+router.get(
+    "/",
+    authorize(async (_req, userData, result) => {
+        const xioUserData = await getUserById(userData.uid);
+        return result(xioUserData);
+    })
+);
 
-router.get("/:id", async (req, res) => {
-    firebase
-        .verifyIdToken(req.headers.authorization ?? "")
-        .then(async () => {
-            const xioUserData = await getUserById(req.params.id);
-            res.send({
-                error: null,
-                result: xioUserData,
-            });
-        })
-        .catch(() => {
-            res.status(400).send({
-                error: "Authentication failed",
-                result: null,
-            });
-        });
-});
+router.get(
+    "/:id",
+    authorize(async (req, _userData, result) => {
+        const xioUserData = await getUserById(req.params.id);
+        return result(xioUserData);
+    })
+);
 
-router.post("/activate", (req, res) => {
-    firebase
-        .verifyIdToken(req.headers.authorization ?? "")
-        .then(async (userData) => {
-            const success = await createUser(req.body.username ?? "", userData);
-            if (success) {
-                res.send({
-                    error: null,
-                    result: null,
-                });
-            } else {
-                res.status(400).send({
-                    error: "Failed to create the user",
-                    result: null,
-                });
-            }
-        })
-        .catch(() => {
-            res.status(400).send({
-                error: "Authentication failed",
-                result: null,
-            });
-        });
-});
+router.post(
+    "/activate",
+    authorize(async (req, userData, result, error) => {
+        const success = await createUser(req.body.username ?? "", userData);
+        if (success) return result(success);
+        else return error(null, "Failed to activate user");
+    })
+);
 
 export default router;
