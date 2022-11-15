@@ -3,6 +3,7 @@ import { createChannel, getUserChannels } from "../database/channels";
 import { getMessages, sendMessage } from "../database/messages";
 import { userJoinChannel } from "../database/users";
 import { authorize } from "../firebase";
+import { pusher } from "../pusher";
 
 const router = Router();
 
@@ -39,6 +40,12 @@ router.post(
             req.body.content,
             userData
         );
+        await pusher.trigger(req.params.id, "message", {
+            content: req.body.content,
+            user: userData.uid,
+            timestamp: Date.now(),
+            key,
+        });
         return result(key);
     })
 );
