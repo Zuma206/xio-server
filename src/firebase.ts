@@ -28,6 +28,7 @@ export const authorize = (
     ) => Promise<APIResponse>
 ) => {
     return async (req: Request, res: Response) => {
+        res.setHeader("Cache-Control", "no-store");
         const token =
             typeof req.headers["x-token"] == "string"
                 ? req.headers["x-token"]
