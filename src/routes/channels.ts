@@ -45,6 +45,8 @@ router.post(
             user: userData.uid,
             timestamp: Date.now(),
             key,
+            clientKey: req.body.clientKey,
+            clientSide: false,
         });
         return result(key);
     })

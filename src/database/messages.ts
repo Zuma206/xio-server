@@ -10,30 +10,37 @@ export type APIMessage = {
     timestamp: number;
 };
 
+export const generateMessageKey = () => {
+    return `${8.64e15 - Date.now()}${Math.floor(
+        Math.random() * (999 - 111) + 111
+    )}`;
+};
+
 export const sendMessage = async (
     channel: string,
     content: string,
     userData: DecodedIdToken
 ) => {
-    const { key } = await messages.put({
+    const key = generateMessageKey();
+    const message: APIMessage = {
         channel,
         content,
         user: userData.uid,
         timestamp: Date.now(),
-    });
-
-    return key;
+    };
+    await messages.put(message, key);
+    return { ...message, key };
 };
 
-export const getMessages = async (channel: string) => {
-    const { items } = await messages.fetch({ channel });
-    return items.sort((message0: APIMessage, message1: APIMessage) => {
-        if (message0.timestamp < message1.timestamp) {
-            return -1;
-        } else if (message0.timestamp == message1.timestamp) {
-            return 0;
-        } else {
-            return 1;
+export const getMessages = async (channel: string, from: number = null) => {
+    const { items } = await messages.fetch(
+        {
+            channel,
+            "key?gt": from ?? generateMessageKey(),
+        },
+        {
+            limit: 5,
         }
-    });
+    );
+    return items.reverse();
 };
