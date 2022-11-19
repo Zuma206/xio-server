@@ -44,3 +44,13 @@ export const getMessages = async (channel: string, from: number = null) => {
     );
     return items.reverse();
 };
+
+export const deleteMessages = async (channel: string) => {
+    while (true) {
+        const res = await messages.fetch({ channel }, { limit: 2 });
+        res.items.forEach((message) => {
+            console.log(message);
+        });
+        break;
+    }
+};

@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { createChannel, getUserChannels } from "../database/channels";
+import {
+    createChannel,
+    deleteChannel,
+    getUserChannels,
+} from "../database/channels";
 import { getMessages, sendMessage } from "../database/messages";
 import { userJoinChannel } from "../database/users";
 import { authorize } from "../firebase";
@@ -57,6 +61,14 @@ router.get(
     authorize(async (req, _userData, result) => {
         const messages = await getMessages(req.params.id);
         return result(messages);
+    })
+);
+
+router.get(
+    "/:id/delete",
+    authorize(async (req, _userData, result) => {
+        await deleteChannel(req.params.id);
+        return result(true);
     })
 );
 

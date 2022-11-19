@@ -1,5 +1,6 @@
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import deta from "./deta";
+import { deleteMessages } from "./messages";
 import { getUserById, userJoinChannel } from "./users";
 
 const channels = deta.Base("channels");
@@ -46,4 +47,9 @@ export const createChannel = async (name: string, token: DecodedIdToken) => {
     await userJoinChannel(channelDetails.key, token);
 
     return true;
+};
+
+export const deleteChannel = async (channelId: string) => {
+    await channels.delete(channelId);
+    await deleteMessages(channelId);
 };
