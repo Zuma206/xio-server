@@ -1,14 +1,15 @@
 import deta from "./deta";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import md5 from "md5";
+import { FetchResponse } from "deta/dist/types/types/base/response";
 
 const users = deta.Base("users");
 
 export type XIOUser = {
     username: string;
     gravatar: string;
-    channels: string[];
     key: string;
+    dev: boolean;
 };
 
 export const getUserById = async (uid: string): Promise<null | XIOUser> => {
@@ -34,22 +35,10 @@ export const createUser = async (
         {
             username,
             gravatar: getGravatar(token),
-            channels: [],
+            dev: false,
         },
         token.uid
     );
 
     return true;
-};
-
-export const userJoinChannel = async (
-    channelId: string,
-    userData: DecodedIdToken
-) => {
-    return await users.update(
-        {
-            channels: users.util.append(channelId),
-        },
-        userData.uid
-    );
 };

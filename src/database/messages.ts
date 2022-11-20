@@ -55,9 +55,11 @@ export const deleteMessages = async (channel: string) => {
     while (res.last) {
         res = await messages.fetch(
             { channel },
-            { limit: 100, last: res.last == "key" ? undefined : res.last }
+            { limit: 50, last: res.last == "key" ? undefined : res.last }
         );
         const puts = res.items.map(({ key }) => ({ key }));
-        await messages.putMany(puts, { expireIn: 0 });
+        if (puts.length > 0) {
+            await messages.putMany(puts, { expireIn: 0 });
+        }
     }
 };

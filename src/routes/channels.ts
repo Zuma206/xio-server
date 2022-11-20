@@ -1,11 +1,15 @@
 import { Router } from "express";
 import {
+    addChannelMember,
+    channelBlacklistUser,
+    channelKickUser,
+    channelWhitelistUser,
     createChannel,
     deleteChannel,
+    getChannelById,
     getUserChannels,
 } from "../database/channels";
-import { getMessages, sendMessage } from "../database/messages";
-import { userJoinChannel } from "../database/users";
+import { deleteMessages, getMessages, sendMessage } from "../database/messages";
 import { authorize } from "../firebase";
 import { pusher } from "../pusher";
 
@@ -31,7 +35,7 @@ router.post(
 router.post(
     "/join",
     authorize(async (req, userData, result) => {
-        await userJoinChannel(req.body.channelId, userData);
+        await addChannelMember(req.body.channelId, userData.uid);
         return result(true);
     })
 );
@@ -68,6 +72,50 @@ router.get(
     "/:id/delete",
     authorize(async (req, _userData, result) => {
         await deleteChannel(req.params.id);
+        pusher.trigger(req.params.id, "deleted", null);
+        return result(true);
+    })
+);
+
+router.get(
+    "/:id/clear",
+    authorize(async (req, _userData, result) => {
+        await deleteMessages(req.params.id);
+        pusher.trigger(req.params.id, "clear", null);
+        return result(true);
+    })
+);
+
+router.get(
+    "/:id/members",
+    authorize(async (req, _userData, result) => {
+        const { members, blacklist } = await getChannelById(req.params.id);
+        return result({ members, blacklist });
+    })
+);
+
+router.post(
+    "/:id/blacklist",
+    authorize(async (req, _userData, result) => {
+        await channelBlacklistUser(req.params.id, req.body.user);
+        await channelKickUser(req.params.id, req.body.user);
+        pusher.trigger(req.params.id, "kicked", req.body.user);
+        return result(true);
+    })
+);
+
+router.post(
+    "/:id/whitelist",
+    authorize(async (req, _userData, result) => {
+        await channelWhitelistUser(req.params.id, req.body.user);
+        return result(true);
+    })
+);
+
+router.get(
+    "/:id/leave",
+    authorize(async (req, userData, result) => {
+        await channelKickUser(req.params.id, userData.uid);
         return result(true);
     })
 );
