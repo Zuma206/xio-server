@@ -33,14 +33,17 @@ export const sendMessage = async (
     return { ...message, key };
 };
 
-export const getMessages = async (channel: string, from: number = null) => {
-    const { items } = await messages.fetch(
+export const getMessages = async (
+    channel: string,
+    from: string = undefined
+) => {
+    const { items, last } = await messages.fetch(
         {
             channel,
-            "key?gt": from ?? generateMessageKey(),
         },
         {
             limit: 5,
+            last: from,
         }
     );
     return items.reverse();
@@ -55,7 +58,7 @@ export const deleteMessages = async (channel: string) => {
     while (res.last) {
         res = await messages.fetch(
             { channel },
-            { limit: 50, last: res.last == "key" ? undefined : res.last }
+            { limit: 25, last: res.last == "key" ? undefined : res.last }
         );
         const puts = res.items.map(({ key }) => ({ key }));
         if (puts.length > 0) {

@@ -120,4 +120,12 @@ router.get(
     })
 );
 
+router.get(
+    "/:id/:last",
+    authorize(async (req, _userData, result) => {
+        const messages = await getMessages(req.params.id, req.params.last);
+        return result(messages);
+    })
+);
+
 export default router;
