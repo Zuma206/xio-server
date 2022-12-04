@@ -35,7 +35,7 @@ export const sendMessage = async (
 
 export const getMessages = async (
     channel: string,
-    from: string = undefined
+    from: string | undefined = undefined
 ) => {
     const { items, last } = await messages.fetch(
         {
@@ -46,7 +46,10 @@ export const getMessages = async (
             last: from,
         }
     );
-    return items.reverse();
+    return {
+        messages: items.reverse(),
+        last,
+    };
 };
 
 export const deleteMessages = async (channel: string) => {
