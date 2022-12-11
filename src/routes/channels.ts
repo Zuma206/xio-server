@@ -1,4 +1,8 @@
 import { Router } from "express";
+import { deleteMessages, getMessages, sendMessage } from "../database/messages";
+import { authorize } from "../firebase";
+import { pusher } from "../pusher";
+import { v4 as uuid } from "uuid";
 import {
     addChannelMember,
     channelBlacklistUser,
@@ -9,9 +13,7 @@ import {
     getChannelById,
     getUserChannels,
 } from "../database/channels";
-import { deleteMessages, getMessages, sendMessage } from "../database/messages";
-import { authorize } from "../firebase";
-import { pusher } from "../pusher";
+import { checkCooldown } from "../database/cooldown";
 
 const router = Router();
 
@@ -42,7 +44,14 @@ router.post(
 
 router.post(
     "/:id/message",
-    authorize(async (req, userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const canSendMessage = await checkCooldown(userData.uid);
+        if (!canSendMessage) {
+            return error(
+                new Error("You are being rate-limited"),
+                "Error sending message"
+            );
+        }
         const key = await sendMessage(
             req.params.id,
             req.body.content,
@@ -52,7 +61,7 @@ router.post(
             content: req.body.content,
             user: userData.uid,
             timestamp: Date.now(),
-            key,
+            key: uuid(),
             clientKey: req.body.clientKey,
             clientSide: false,
         });
