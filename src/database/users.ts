@@ -1,7 +1,6 @@
 import deta from "./deta";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import md5 from "md5";
-import { FetchResponse } from "deta/dist/types/types/base/response";
 
 const users = deta.Base("users");
 
@@ -18,6 +17,11 @@ export const getUserById = async (uid: string): Promise<null | XIOUser> => {
         return user as XIOUser;
     }
     return null;
+};
+
+export const isValidUsername = async (username: string) => {
+    const usersWithUsername = await users.fetch({ username });
+    return usersWithUsername.count === 0;
 };
 
 export const getGravatar = (token: DecodedIdToken) => {
