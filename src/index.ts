@@ -1,13 +1,16 @@
 import express from "express";
 import users from "./routes/users";
 import channels from "./routes/channels";
-import { authorize } from "./firebase";
+import { authorize, firebase } from "./firebase";
 import axios from "axios";
+import { userInChannel } from "./database/channels";
+import { pusher } from "./pusher";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use("/api/users", users);
 app.use("/api/channels", channels);
 
@@ -22,6 +25,28 @@ app.post(
         return result(res.status == 200);
     })
 );
+
+app.post("/api/auth", async (req, res) => {
+    try {
+        const socketId = req.body.socket_id;
+        const pusherChannel = req.body.channel_name;
+        const userData = await firebase.verifyIdToken(
+            req.headers.authorization
+        );
+        console.log(socketId.substring(8));
+        const authorized = await userInChannel(
+            pusherChannel.substring(8),
+            userData.uid
+        );
+        if (authorized) {
+            const response = pusher.authorizeChannel(socketId, pusherChannel);
+            res.send(response);
+        }
+        res.status(403).end();
+    } catch {
+        res.status(403).end();
+    }
+});
 
 if (!process.env.DETA_RUNTIME) {
     app.listen(PORT, () => console.log(`Started on http://localhost:${PORT}`));

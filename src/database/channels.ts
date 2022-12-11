@@ -35,7 +35,8 @@ export const addChannelMember = async (channelId: string, memberId: string) => {
     if (
         !channelData ||
         channelData.members.length >= 10 ||
-        channelData.blacklist.includes(memberId)
+        channelData.blacklist.includes(memberId) ||
+        channelData.members.includes(memberId)
     ) {
         return false;
     }
@@ -43,6 +44,14 @@ export const addChannelMember = async (channelId: string, memberId: string) => {
         { members: channels.util.append(memberId) },
         channelId
     );
+    return true;
+};
+
+export const userInChannel = async (channelId: string, memberId: string) => {
+    const channelData = (await channels.get(channelId)) as XIOChannel | null;
+    if (!channelData || !channelData.members.includes(memberId)) {
+        return false;
+    }
     return true;
 };
 
