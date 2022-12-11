@@ -31,10 +31,15 @@ export const getUserChannels = async (
 };
 
 export const addChannelMember = async (channelId: string, memberId: string) => {
+    const channelData = await channels.get(channelId);
+    if (!channelData) {
+        return false;
+    }
     await channels.update(
         { members: channels.util.append(memberId) },
         channelId
     );
+    return true;
 };
 
 export const createChannel = async (name: string, token: DecodedIdToken) => {
@@ -46,6 +51,11 @@ export const createChannel = async (name: string, token: DecodedIdToken) => {
     });
 
     return true;
+};
+
+export const userCanCreateChannel = async (uid: string) => {
+    const { count } = await channels.fetch({ "owners?contains": uid });
+    return count < 3;
 };
 
 export const deleteChannel = async (channelId: string) => {

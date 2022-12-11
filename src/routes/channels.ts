@@ -12,6 +12,7 @@ import {
     deleteChannel,
     getChannelById,
     getUserChannels,
+    userCanCreateChannel,
 } from "../database/channels";
 import { checkCooldown } from "../database/cooldown";
 
@@ -28,7 +29,17 @@ router.get(
 router.post(
     "/create",
     authorize(async (req, userData, result, error) => {
-        const success: boolean = await createChannel(req.body.name, userData);
+        const channelNameRegex = /([A-z]|\ |[0-9]){3,16}/;
+        const name: string = req.body.name;
+        const isValidName = channelNameRegex.test(name);
+        const canCreate = await userCanCreateChannel(userData.uid);
+        if (!isValidName) {
+            return error(null, "Invalid channel name");
+        }
+        if (!canCreate) {
+            return error(null, "You have hit the channel ownership limit (3)");
+        }
+        const success: boolean = await createChannel(name, userData);
         if (success) return result(success);
         else return error(null, "Failed to create channel");
     })
@@ -37,8 +48,8 @@ router.post(
 router.post(
     "/join",
     authorize(async (req, userData, result) => {
-        await addChannelMember(req.body.channelId, userData.uid);
-        return result(true);
+        const added = await addChannelMember(req.body.channelId, userData.uid);
+        return result(added);
     })
 );
 
