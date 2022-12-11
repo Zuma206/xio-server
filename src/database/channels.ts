@@ -31,8 +31,12 @@ export const getUserChannels = async (
 };
 
 export const addChannelMember = async (channelId: string, memberId: string) => {
-    const channelData = await channels.get(channelId);
-    if (!channelData) {
+    const channelData = (await channels.get(channelId)) as XIOChannel | null;
+    if (
+        !channelData ||
+        channelData.members.length >= 10 ||
+        channelData.blacklist.includes(memberId)
+    ) {
         return false;
     }
     await channels.update(

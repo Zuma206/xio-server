@@ -3,6 +3,8 @@ import { deleteMessages, getMessages, sendMessage } from "../database/messages";
 import { authorize } from "../firebase";
 import { pusher } from "../pusher";
 import { v4 as uuid } from "uuid";
+import { checkCooldown } from "../database/cooldown";
+import emoji from "node-emoji";
 import {
     addChannelMember,
     channelBlacklistUser,
@@ -14,7 +16,6 @@ import {
     getUserChannels,
     userCanCreateChannel,
 } from "../database/channels";
-import { checkCooldown } from "../database/cooldown";
 
 const router = Router();
 
@@ -57,6 +58,19 @@ router.post(
     "/:id/message",
     authorize(async (req, userData, result, error) => {
         const canSendMessage = await checkCooldown(userData.uid);
+        const messageRegEx = /^[A-z0-9, !@#$%^&*()\-_=+`~[{\]}|;:'",<.>/?]*$/;
+        if (req.body.content.length < 1 || req.body.content.length > 280) {
+            return error(
+                new Error("Invalid message length"),
+                "Error sending message"
+            );
+        }
+        if (!messageRegEx.test(emoji.strip(req.body.content))) {
+            return error(
+                new Error("Invalid characters in message"),
+                "Error sending message"
+            );
+        }
         if (!canSendMessage) {
             return error(
                 new Error("You are being rate-limited"),
