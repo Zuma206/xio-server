@@ -16,6 +16,7 @@ import {
     getUserChannels,
     userCanCreateChannel,
     userInChannel,
+    userIsOwner,
 } from "../database/channels";
 import { getPusher, refreshPusher } from "../database/pushers";
 
@@ -38,7 +39,7 @@ router.get(
         }
         return result(await getPusher(req.params.id));
     })
-);
+); // finished validation
 
 router.post(
     "/create",
@@ -57,7 +58,7 @@ router.post(
         if (success) return result(success);
         else return error(null, "Failed to create channel");
     })
-);
+); // finished validation
 
 router.post(
     "/join",
@@ -65,13 +66,18 @@ router.post(
         const added = await addChannelMember(req.body.channelId, userData.uid);
         return result(added);
     })
-);
+); // finished validation
 
 router.post(
     "/:id/message",
     authorize(async (req, userData, result, error) => {
         const inChannel = await userInChannel(req.params.id, userData.uid);
-        if (!inChannel) return;
+        if (!inChannel) {
+            return error(
+                new Error("You do not have permission to send messages here"),
+                "Error sending message"
+            );
+        }
         const canSendMessage = await checkCooldown(userData.uid);
         const messageRegEx = /^[A-z0-9, !@#$%^&*()\-_=+`~[{\]}|;:'",<.>/?]*$/;
         if (req.body.content.length < 1 || req.body.content.length > 280) {
@@ -112,47 +118,83 @@ router.post(
         );
         return result(key);
     })
-);
+); // finished validation
 
 router.get(
     "/:id",
-    authorize(async (req, _userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const inChannel = await userInChannel(req.params.id, userData.uid);
+        if (!inChannel) {
+            return error(
+                null,
+                "You do not have permission to view this channel"
+            );
+        }
         const messages = await getMessages(req.params.id);
         return result(messages);
     })
-);
+); // finished validation
 
 router.get(
     "/:id/delete",
-    authorize(async (req, _userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const isOwner = await userIsOwner(req.params.id, userData.uid);
+        if (!isOwner) {
+            return error(
+                null,
+                "You do not have permission to delete this channel"
+            );
+        }
+        const pusherId = await getPusher(req.params.id);
         await deleteChannel(req.params.id);
-        const pusherId = await await getPusher(req.params.id);
         pusher.trigger(`private-${req.params.id}-${pusherId}`, "deleted", null);
         return result(true);
     })
-);
+); // finished validation
 
 router.get(
     "/:id/clear",
-    authorize(async (req, _userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const isOwner = await userIsOwner(req.params.id, userData.uid);
+        if (!isOwner) {
+            return error(
+                null,
+                "You do not have permission to clear this channel"
+            );
+        }
         await deleteMessages(req.params.id);
         const pusherId = await await getPusher(req.params.id);
         pusher.trigger(`private-${req.params.id}-${pusherId}`, "clear", null);
         return result(true);
     })
-);
+); // finished validation
 
 router.get(
     "/:id/members",
-    authorize(async (req, _userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const isMember = await userInChannel(req.params.id, userData.uid);
+        if (!isMember) {
+            return error(
+                null,
+                "You do not have permission to view this channel"
+            );
+        }
         const { members, blacklist } = await getChannelById(req.params.id);
         return result({ members, blacklist });
     })
-);
+); // finished validation
 
 router.post(
     "/:id/blacklist",
-    authorize(async (req, _userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const isCallerOwner = await userIsOwner(req.params.id, userData.uid);
+        const isSubjectOwner = await userIsOwner(req.params.id, req.body.user);
+        if (!isCallerOwner || isSubjectOwner) {
+            return error(
+                null,
+                "You do not have permission to blacklist this user"
+            );
+        }
         await channelBlacklistUser(req.params.id, req.body.user);
         await channelKickUser(req.params.id, req.body.user);
         const pusherId = await await getPusher(req.params.id);
@@ -164,23 +206,34 @@ router.post(
         await refreshPusher(req.params.id);
         return result(true);
     })
-);
+); // finished validation
 
 router.post(
     "/:id/whitelist",
-    authorize(async (req, _userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const isOwner = await userIsOwner(req.params.id, userData.uid);
+        if (!isOwner) {
+            return error(
+                null,
+                "You do not have permission to whitelist this user"
+            );
+        }
         await channelWhitelistUser(req.params.id, req.body.user);
         return result(true);
     })
-);
+); // finished validation
 
 router.get(
     "/:id/leave",
-    authorize(async (req, userData, result) => {
+    authorize(async (req, userData, result, error) => {
+        const isOwner = await userIsOwner(req.params.id, userData.uid);
+        if (isOwner) {
+            return error(null, "You cannot leave this server");
+        }
         await channelKickUser(req.params.id, userData.uid);
         return result(true);
     })
-);
+); // finished validation
 
 router.get(
     "/:id/:last",

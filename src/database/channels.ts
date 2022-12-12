@@ -56,6 +56,14 @@ export const userInChannel = async (channelId: string, memberId: string) => {
     return true;
 };
 
+export const userIsOwner = async (channelId: string, memberId: string) => {
+    const channelData = (await channels.get(channelId)) as XIOChannel | null;
+    if (!channelData || !channelData.owners.includes(memberId)) {
+        return false;
+    }
+    return true;
+};
+
 export const createChannel = async (name: string, token: DecodedIdToken) => {
     const { key } = (await channels.put({
         name,
