@@ -20,6 +20,7 @@
 		"@types/md5": "^2.3.2",
 		"@types/node": "14",
 		"@types/node-emoji": "^1.8.2",
+		"@types/node-fetch": "^2.6.2",
 		"@types/uuid": "^9.0.0",
 		"deta": "^1.1.0",
 		"nodemon": "^2.0.20",
