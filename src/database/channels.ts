@@ -1,6 +1,7 @@
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import deta from "./deta";
 import { deleteMessages } from "./messages";
+import { deletePusher, refreshPusher } from "./pushers";
 import { getUserById } from "./users";
 
 const channels = deta.Base("channels");
@@ -56,13 +57,13 @@ export const userInChannel = async (channelId: string, memberId: string) => {
 };
 
 export const createChannel = async (name: string, token: DecodedIdToken) => {
-    await channels.put({
+    const { key } = (await channels.put({
         name,
         owners: [token.uid],
         blacklist: [],
         members: [token.uid],
-    });
-
+    })) as XIOChannel;
+    await refreshPusher(key);
     return true;
 };
 
@@ -73,6 +74,7 @@ export const userCanCreateChannel = async (uid: string) => {
 
 export const deleteChannel = async (channelId: string) => {
     await channels.delete(channelId);
+    await deletePusher(channelId);
     await deleteMessages(channelId);
 };
 

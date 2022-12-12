@@ -33,9 +33,8 @@ app.post("/api/auth", async (req, res) => {
         const userData = await firebase.verifyIdToken(
             req.headers.authorization
         );
-        console.log(socketId.substring(8));
         const authorized = await userInChannel(
-            pusherChannel.substring(8),
+            pusherChannel.split("-")[1],
             userData.uid
         );
         if (authorized) {

@@ -17,6 +17,7 @@ import {
     userCanCreateChannel,
     userInChannel,
 } from "../database/channels";
+import { getPusher, refreshPusher } from "../database/pushers";
 
 const router = Router();
 
@@ -25,6 +26,17 @@ router.get(
     authorize(async (_req, userData, result) => {
         const userChannels = await getUserChannels(userData);
         return result(userChannels);
+    })
+);
+
+router.get(
+    "/:id/pusher",
+    authorize(async (req, userData, result, error) => {
+        const inChannel = await userInChannel(req.params.id, userData.uid);
+        if (!inChannel) {
+            return error(null, "You must be in a channel to connect to it");
+        }
+        return result(await getPusher(req.params.id));
     })
 );
 
@@ -85,14 +97,19 @@ router.post(
             req.body.content,
             userData
         );
-        await pusher.trigger(`private-${req.params.id}`, "message", {
-            content: req.body.content,
-            user: userData.uid,
-            timestamp: Date.now(),
-            key: uuid(),
-            clientKey: req.body.clientKey,
-            clientSide: false,
-        });
+        const pusherId = await getPusher(req.params.id);
+        await pusher.trigger(
+            `private-${req.params.id}-${pusherId}`,
+            "message",
+            {
+                content: req.body.content,
+                user: userData.uid,
+                timestamp: Date.now(),
+                key: uuid(),
+                clientKey: req.body.clientKey,
+                clientSide: false,
+            }
+        );
         return result(key);
     })
 );
@@ -109,7 +126,8 @@ router.get(
     "/:id/delete",
     authorize(async (req, _userData, result) => {
         await deleteChannel(req.params.id);
-        pusher.trigger(`private-${req.params.id}`, "deleted", null);
+        const pusherId = await await getPusher(req.params.id);
+        pusher.trigger(`private-${req.params.id}-${pusherId}`, "deleted", null);
         return result(true);
     })
 );
@@ -118,7 +136,8 @@ router.get(
     "/:id/clear",
     authorize(async (req, _userData, result) => {
         await deleteMessages(req.params.id);
-        pusher.trigger(`private-${req.params.id}`, "clear", null);
+        const pusherId = await await getPusher(req.params.id);
+        pusher.trigger(`private-${req.params.id}-${pusherId}`, "clear", null);
         return result(true);
     })
 );
@@ -136,7 +155,13 @@ router.post(
     authorize(async (req, _userData, result) => {
         await channelBlacklistUser(req.params.id, req.body.user);
         await channelKickUser(req.params.id, req.body.user);
-        pusher.trigger(`private-${req.params.id}`, "kicked", req.body.user);
+        const pusherId = await await getPusher(req.params.id);
+        pusher.trigger(
+            `private-${req.params.id}-${pusherId}`,
+            "kicked",
+            req.body.user
+        );
+        await refreshPusher(req.params.id);
         return result(true);
     })
 );
