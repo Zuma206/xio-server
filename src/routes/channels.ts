@@ -153,6 +153,14 @@ router.get(
 ); // finished validation
 
 router.get(
+    "/:id/data",
+    authorize(async (req, _userData, result) => {
+        const channelData = await getChannelById(req.params.id);
+        return result(channelData);
+    })
+);
+
+router.get(
     "/:id/clear",
     authorize(async (req, userData, result, error) => {
         const isOwner = await userIsOwner(req.params.id, userData.uid);
