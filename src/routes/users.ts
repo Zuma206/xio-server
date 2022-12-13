@@ -25,9 +25,10 @@ router.post(
     authorize(async (req, userData, result, error) => {
         const usernameRegex = /^[a-zA-Z0-9]{3,16}$/;
         const username = req.body.username ?? "";
-        const validUsername =
-            usernameRegex.test(username) && (await isValidUsername(username));
-        if (!validUsername) return error(null, "Invalid username");
+        const passedRegex = usernameRegex.test(username);
+        const passedTest = await isValidUsername(username);
+        if (!passedRegex) return error(null, "Invalid username");
+        if (!passedTest) return error(null, "That username is taken");
         const success = await createUser(username, userData);
         if (success) return result(success);
         else return error(null, "Failed to activate user");

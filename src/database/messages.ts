@@ -42,7 +42,7 @@ export const getMessages = async (
             channel,
         },
         {
-            limit: 5,
+            limit: 50,
             last: from,
         }
     );

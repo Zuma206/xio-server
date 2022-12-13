@@ -14,8 +14,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api/users", users);
 app.use("/api/channels", channels);
 
-app.get("*", async (_req, res) => {
-    res.send("XIO API");
+app.get("*", async (req, res) => {
+    res.send(req.url);
 });
 
 app.post(
@@ -39,16 +39,17 @@ app.post("/api/auth", async (req, res) => {
         );
         if (authorized) {
             const response = pusher.authorizeChannel(socketId, pusherChannel);
-            res.send(response);
+            res.send(response).end();
+        } else {
+            res.status(403).end();
         }
-        res.status(403).end();
     } catch {
         res.status(403).end();
     }
 });
 
-if (!process.env.DETA_RUNTIME) {
+if (0) {
     app.listen(PORT, () => console.log(`Started on http://localhost:${PORT}`));
 }
 
-export default app;
+module.exports = app;
