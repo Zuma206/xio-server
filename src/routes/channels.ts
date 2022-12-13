@@ -187,8 +187,10 @@ router.get(
                 "You do not have permission to view this channel"
             );
         }
-        const { members, blacklist } = await getChannelById(req.params.id);
-        return result({ members, blacklist });
+        const { members, blacklist, owners } = await getChannelById(
+            req.params.id
+        );
+        return result({ members, blacklist, owners });
     })
 ); // finished validation
 
