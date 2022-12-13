@@ -5,6 +5,7 @@ import { authorize, firebase } from "./firebase";
 import axios from "axios";
 import { userInChannel } from "./database/channels";
 import { pusher } from "./pusher";
+import process from "process";
 
 const app = express();
 const PORT = 3000;
@@ -48,7 +49,7 @@ app.post("/api/auth", async (req, res) => {
     }
 });
 
-if (0) {
+if (process.argv.length > 2 && process.argv[2] == "boot") {
     app.listen(PORT, () => console.log(`Started on http://localhost:${PORT}`));
 }
 

@@ -3,9 +3,9 @@
 	"main": "index.js",
 	"license": "UNLICENSED",
 	"scripts": {
-		"dev": "nodemon --watch src src/index.ts",
+		"dev": "nodemon --watch src src/index.ts boot",
 		"build": "tsc",
-		"start": "node index.js"
+		"start": "npm run build && node index.js boot"
 	},
 	"dependencies": {
 		"axios": "^1.1.3",
