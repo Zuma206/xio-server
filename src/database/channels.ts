@@ -35,7 +35,7 @@ export const addChannelMember = async (channelId: string, memberId: string) => {
     const channelData = (await channels.get(channelId)) as XIOChannel | null;
     if (
         !channelData ||
-        channelData.members.length >= 10 ||
+        channelData.members.length >= 20 ||
         channelData.blacklist.includes(memberId) ||
         channelData.members.includes(memberId)
     ) {
