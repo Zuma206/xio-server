@@ -22,7 +22,11 @@ app.get("*", async (req, res) => {
 app.post(
     "/api/image",
     authorize(async (req, _userData, result) => {
-        const res = await axios.get(req.body.url);
+        const res = await axios.get(
+            `https://external-content.duckduckgo.com/iu/?u=${encodeURIComponent(
+                req.body.url
+            )}`
+        );
         return result(res.status == 200);
     })
 );
