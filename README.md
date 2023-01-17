@@ -28,7 +28,7 @@ A production instance can be found [here](https://api.xio.zuma.eu.org/).
 4. Follow the guide on the client's repo, configuring it with the URL of this server
 5. Execute some scripts from the table below!
 
-####Scripts `npm run [script]`:
+#### Scripts `npm run [script]`:
 
 | Script | Function                                                    |
 | ------ | ----------------------------------------------------------- |
