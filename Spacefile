@@ -1,0 +1,11 @@
+# Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
+
+v: 0
+micros:
+  - name: XIO-Dist
+    src: .
+    run: node dist/index.js
+    primary: true
+    engine: nodejs16
+    public_routes:
+      - "/*"

@@ -4,3 +4,4 @@ node_modules
 src/serviceAccount.json
 src/database/deta.ts
 src/pusher.ts
+.space
