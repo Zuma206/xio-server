@@ -144,7 +144,7 @@ router.post(
           },
         ],
         attachments: [],
-        username: xioUserData.username,
+        username: `${xioUserData.username} (via XIO)`,
         avatar_url: xioUserData.gravatar,
       });
     }
