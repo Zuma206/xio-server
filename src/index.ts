@@ -1,6 +1,7 @@
 import express from "express";
 import users from "./routes/users";
 import channels from "./routes/channels";
+import webhooks from "./routes/webhook";
 import { authorize, firebase } from "./firebase";
 import axios from "axios";
 import { userInChannel } from "./database/channels";
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api/users", users);
 app.use("/api/channels", channels);
+app.use("/api/webhooks", webhooks);
 
 app.get("*", async (req, res) => {
   res.send(req.url);

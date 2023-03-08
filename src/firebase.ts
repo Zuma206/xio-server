@@ -21,10 +21,10 @@ export const authorize = (
   callback: (
     req: Request,
     userData: DecodedIdToken,
-    result: (result: any) => any,
+    result: (result: any, extraData?: any) => any,
     error: (error: Error | null, response: string) => APIResponse
   ) => Promise<APIResponse>,
-  onFinish?: () => void
+  onResult?: (result: any) => void
 ) => {
   return async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-store");
@@ -33,10 +33,12 @@ export const authorize = (
     firebase
       .verifyIdToken(token)
       .then(async (userData) => {
+        let extraDataState;
         const response = await callback(
           req,
           userData,
-          (result: any): APIResponse => {
+          (result: any, extraData: any): APIResponse => {
+            extraDataState = extraData;
             return {
               error: null,
               result,
@@ -52,7 +54,10 @@ export const authorize = (
             };
           }
         );
-        res.status(200).send(response);
+        res.status(200).send({ ...response, thing: "RTEJGHITRHN" });
+        if (onResult && response.result !== null) {
+          onResult(extraDataState);
+        }
       })
       .catch((err) => {
         const response: APIResponse = {
@@ -62,11 +67,11 @@ export const authorize = (
           },
           result: null,
         };
-        res.status(400).send(response);
+        if (!res.writableEnded) {
+          res.status(400).send(response);
+        } else {
+          console.error(err);
+        }
       });
-    res.end();
-    if (onFinish) {
-      onFinish();
-    }
   };
 };

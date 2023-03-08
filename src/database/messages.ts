@@ -69,3 +69,7 @@ export const deleteMessages = async (channel: string) => {
     }
   }
 };
+
+export async function getMessage(id: string) {
+  return await messages.get(id);
+}

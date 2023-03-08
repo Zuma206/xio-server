@@ -19,6 +19,10 @@ import {
   userIsOwner,
 } from "../database/channels";
 import { getPusher, refreshPusher } from "../database/pushers";
+import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
+import { getWebhook } from "../database/webhook";
+import { getUserById } from "../database/users";
+import axios from "axios";
 
 const router = Router();
 
@@ -70,46 +74,81 @@ router.post(
 
 router.post(
   "/:id/message",
-  authorize(async (req, userData, result, error) => {
-    const inChannel = await userInChannel(req.params.id, userData.uid);
-    if (!inChannel) {
-      return error(
-        new Error("You do not have permission to send messages here"),
-        "Error sending message"
-      );
+  authorize(
+    async (req, userData, result, error) => {
+      const inChannel = await userInChannel(req.params.id, userData.uid);
+      if (!inChannel) {
+        return error(
+          new Error("You do not have permission to send messages here"),
+          "Error sending message"
+        );
+      }
+      const canSendMessage = await checkCooldown(userData.uid);
+      const messageRegEx = /^[A-z0-9, !@#$%^&*()\-_=+`~[{\]}|;:'",<.>/?]*$/;
+      if (req.body.content.length < 1 || req.body.content.length > 280) {
+        return error(
+          new Error("Invalid message length"),
+          "Error sending message"
+        );
+      }
+      if (!messageRegEx.test(emoji.strip(req.body.content))) {
+        return error(
+          new Error("Invalid characters in message"),
+          "Error sending message"
+        );
+      }
+      if (!canSendMessage) {
+        return error(
+          new Error("You are being rate-limited"),
+          "Error sending message"
+        );
+      }
+      const key = await sendMessage(req.params.id, req.body.content, userData);
+      const pusherId = await getPusher(req.params.id);
+      await pusher.trigger(`private-${req.params.id}-${pusherId}`, "message", {
+        content: req.body.content,
+        user: userData.uid,
+        timestamp: Date.now(),
+        key: uuid(),
+        clientKey: req.body.clientKey,
+        clientSide: false,
+      });
+      return result(key, {
+        userData,
+        content: req.body.content,
+        channel: req.params.id,
+      });
+    },
+    async ({
+      userData,
+      content,
+      channel,
+    }: {
+      userData: DecodedIdToken;
+      content: string;
+      channel: string;
+    }) => {
+      const webhook = await getWebhook(channel);
+      if (!webhook) return;
+      const xioUserData = await getUserById(userData.uid);
+      axios.post(webhook, {
+        content: null,
+        embeds: [
+          {
+            title:
+              content.length > 256
+                ? content.substring(0, 253) + "..."
+                : content,
+            description: `[XIO](https://xio.zuma.eu.org/) - [Join Link](https://xio.zuma.eu.org/join/${channel})`,
+            color: 14902018,
+          },
+        ],
+        attachments: [],
+        username: xioUserData.username,
+        avatar_url: xioUserData.gravatar,
+      });
     }
-    const canSendMessage = await checkCooldown(userData.uid);
-    const messageRegEx = /^[A-z0-9, !@#$%^&*()\-_=+`~[{\]}|;:'",<.>/?]*$/;
-    if (req.body.content.length < 1 || req.body.content.length > 280) {
-      return error(
-        new Error("Invalid message length"),
-        "Error sending message"
-      );
-    }
-    if (!messageRegEx.test(emoji.strip(req.body.content))) {
-      return error(
-        new Error("Invalid characters in message"),
-        "Error sending message"
-      );
-    }
-    if (!canSendMessage) {
-      return error(
-        new Error("You are being rate-limited"),
-        "Error sending message"
-      );
-    }
-    const key = await sendMessage(req.params.id, req.body.content, userData);
-    const pusherId = await getPusher(req.params.id);
-    await pusher.trigger(`private-${req.params.id}-${pusherId}`, "message", {
-      content: req.body.content,
-      user: userData.uid,
-      timestamp: Date.now(),
-      key: uuid(),
-      clientKey: req.body.clientKey,
-      clientSide: false,
-    });
-    return result(key);
-  })
+  )
 ); // finished validation
 
 router.get(

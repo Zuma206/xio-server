@@ -47,7 +47,7 @@ export const addChannelMember = async (channelId: string, memberId: string) => {
 
 export const userInChannel = async (channelId: string, memberId: string) => {
   const channelData = (await channels.get(channelId)) as XIOChannel | null;
-  if (!channelData || !channelData.members.includes(memberId)) {
+  if (channelData === null || !channelData.members.includes(memberId)) {
     return false;
   }
   return true;
@@ -55,7 +55,7 @@ export const userInChannel = async (channelId: string, memberId: string) => {
 
 export const userIsOwner = async (channelId: string, memberId: string) => {
   const channelData = (await channels.get(channelId)) as XIOChannel | null;
-  if (!channelData || !channelData.owners.includes(memberId)) {
+  if (channelData === null || !channelData.owners.includes(memberId)) {
     return false;
   }
   return true;
