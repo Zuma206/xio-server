@@ -132,19 +132,8 @@ router.post(
       if (!webhook) return;
       const xioUserData = await getUserById(userData.uid);
       axios.post(webhook, {
-        content: null,
-        embeds: [
-          {
-            title:
-              content.length > 256
-                ? content.substring(0, 253) + "..."
-                : content,
-            description: `[XIO](https://xio.zuma.eu.org/) - [Join Link](https://xio.zuma.eu.org/join/${channel})`,
-            color: 14902018,
-          },
-        ],
-        attachments: [],
-        username: `${xioUserData.username} (via XIO)`,
+        content,
+        username: `${xioUserData.username} [XIO]`,
         avatar_url: xioUserData.gravatar,
       });
     }
