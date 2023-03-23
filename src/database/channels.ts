@@ -74,7 +74,7 @@ export const createChannel = async (name: string, token: DecodedIdToken) => {
 
 export const userCanCreateChannel = async (uid: string) => {
   const { count } = await channels.fetch({ "owners?contains": uid });
-  return count < 3;
+  return count < 5;
 };
 
 export const deleteChannel = async (channelId: string) => {

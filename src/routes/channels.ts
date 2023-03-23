@@ -56,7 +56,7 @@ router.post(
       return error(null, "Invalid channel name");
     }
     if (!canCreate) {
-      return error(null, "You have hit the channel ownership limit (3)");
+      return error(null, "You already have the maximum of 5 channels");
     }
     const success: boolean = await createChannel(name, userData);
     if (success) return result(success);
