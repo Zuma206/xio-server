@@ -1,6 +1,7 @@
-<h1 style="display:flex;align-items:center">
-	<img src="https://xio.zuma.eu.org/new.svg" style="height:1em"/>&nbsp;XIO Server
-</h1>
+<h3 style="text-align:center;">🚧 This repository is now archived 🚧</h3>
+With deta having shutdown, this repo has no way of being hosted. The frontend repo will soon be updated to the latest version of react router, which will likely include all the server side endpoints built in.
+
+# <img src="https://xio.zuma.eu.org/new.svg" style="height:1em"/>&nbsp;XIO Server
 
 <div style="display:flex">
 
